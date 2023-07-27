@@ -1,0 +1,348 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Dashboard{% endblock title %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Dashboard</h1>
+            </div><!-- /.col -->
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
+            </div><!-- /.col -->
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <!-- Small boxes (Stat box) -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <!-- small box -->
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{products}}</h3>
+                        <p>Products</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-bag"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-6">
+                <!-- small box -->
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{categories}}</h3>
+                        <p>Categories</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-stats-bars"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-6">
+                <!-- small box -->
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ingredients}}</h3>
+                        <p>Ingredients</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-person-add"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+            <!-- ./col -->
+            <div class="col-lg-3 col-6">
+                <!-- small box -->
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{recipes}}</h3>
+                        <p>Recipes</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-pie-graph"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+        </div>
+        <!-- /.row -->
+
+        <!-- New div for the Chart.js revenue report -->
+        <div class="row">
+            <!-- Biểu đồ doanh thu theo tháng -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Doanh thu theo tháng</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="revenueByMonthChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Biểu đồ chi phí theo tháng -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Chi phí theo tháng</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="expensesByMonthChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Biểu đồ doanh thu theo sản phẩm -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Doanh thu theo sản phẩm</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="revenueByProductChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Biểu đồ doanh thu theo danh mục -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Doanh thu theo danh mục</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="revenueByCategoryChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+
+        </div>
+    </div>
+</section>
+
+<script>
+    // Function to load data for revenue by month chart
+    function loadRevenueByMonthData() {
+        $.ajax({
+            url: '{% url "get_monthly_revenue_data" %}',
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                var revenueData = [];
+
+                // Initialize revenueData array with zeros for all months
+                for (var i = 0; i < 12; i++) {
+                    revenueData.push(0);
+                }
+
+                // Update revenueData array with actual revenue values
+                for (var j = 0; j < data.length; j++) {
+                    var monthIndex = data[j].month - 1;
+                    revenueData[monthIndex] = data[j].revenue;
+                }
+
+                var ctx = document.getElementById('revenueByMonthChart').getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: revenueData,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // Function to load data for revenue by day in week chart
+    function loadRevenueByDayInWeekData() {
+        $.ajax({
+            url: '{% url "get_weekly_revenue_data" %}',
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                var daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                var revenueData = [];
+
+                // Initialize revenueData array with zeros for all days of the week
+                for (var i = 0; i < 7; i++) {
+                    revenueData.push(0);
+                }
+
+                // Update revenueData array with actual revenue values
+                for (var j = 0; j < data.length; j++) {
+                    var dayIndex = data[j].day - 1;
+                    revenueData[dayIndex] = data[j].revenue;
+                }
+
+                var ctx = document.getElementById('revenueByDayInWeekChart').getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: daysOfWeek,
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: revenueData,
+                            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // Function to load data for revenue by product chart
+    function loadRevenueByProductData() {
+        $.ajax({
+            url: '{% url "get_product_revenue_data" %}',
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                var products = [];
+                var revenueData = [];
+
+                for (var i = 0; i < data.length; i++) {
+                    products.push(data[i].product);
+                    revenueData.push(data[i].revenue);
+                }
+
+                var ctx = document.getElementById('revenueByProductChart').getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: products,
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: revenueData,
+                            backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
+                            borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                            borderWidth: 1
+                        }]
+                    }
+                });
+            }
+        });
+    }
+
+    // Function to load data for revenue by category chart
+    function loadRevenueByCategoryData() {
+        $.ajax({
+            url: '{% url "get_category_revenue_data" %}',
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                var categories = [];
+                var revenueData = [];
+
+                for (var i = 0; i < data.length; i++) {
+                    categories.push(data[i].category);
+                    revenueData.push(data[i].revenue);
+                }
+
+                var ctx = document.getElementById('revenueByCategoryChart').getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: revenueData,
+                            backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
+                            borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                            borderWidth: 1
+                        }]
+                    }
+                });
+            }
+        });
+    }
+
+    function loadExpensesByMonthData() {
+        $.ajax({
+            url: '{% url "get_receipt_expenses_by_month_data" %}',
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                var months = [];
+                var expensesData = [];
+
+                for (var i = 1; i <= 12; i++) {
+                    var monthData = data.find(item => item.month === i);
+                    months.push(i);
+                    expensesData.push(monthData ? monthData.total_expenses : 0);
+                }
+
+                var ctx = document.getElementById('expensesByMonthChart').getContext('2d');
+                var chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Chi Phí',
+                            data: expensesData,
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // Call the functions to load revenue data and draw the charts
+    loadRevenueByMonthData();
+    loadRevenueByDayInWeekData();
+    loadRevenueByProductData();
+    loadRevenueByCategoryData();
+    loadExpensesByMonthData();
+</script>
+{% endblock content %}

@@ -1,0 +1,122 @@
+{% load humanize %}
+<style>
+    #uni_modal .modal-footer {
+        display: none
+    }
+</style>
+<div class="container-fluid ">
+    <div id="outprint">
+        <div class="lh-1">
+            <center><small class="fw-bold">POS</small></center>
+            <center><small class="fw-bold">Unofficial Receipt</small></center>
+        </div>
+        <hr>
+        <div class="lh-1">
+            <div>
+                <span>Data:</span> {{ transaction.date_added|date:"M d Y" }} <br>
+                <span>Transaction Code:</span> {{ transaction.code }}
+            </div>
+        </div>
+        <div class="clear-fix py-3"></div>
+        <div class="lh-1">
+            <div class="d-flex w-100 align-items-end border-bottom">
+                <div class="col-2 text-center fw-bold">Qty</div>
+                <div class="col-2 text-center fw-bold">Product</div>
+                <div class="col-2 text-center fw-bold">Toppings</div>
+                <div class="col-2 text-center fw-bold">Size</div>
+                <div class="col-2 text-center fw-bold">Sugar</div>
+                <div class="col-2 text-center fw-bold">Amount</div>
+            </div>
+            {% for item in salesItems %}
+            <div class="d-flex w-100 align-items-end">
+                <div class="col-2 text-center fw-bold">
+                    <div class="lh-1">
+                        <small>{{ item.quantity|intcomma|floatformat:0 }}</small>
+                    </div>
+                </div>
+                <div class="col-2 text-center fw-bold">
+                    <div class="lh-1">
+                        <small>{{ item.product }}</small><br>
+                        <small>{{ item.price|intcomma }}</small><br>
+                    </div>
+                </div>
+                <div class="col-2 text-center fw-bold">
+                    {% for topping in item.ordertopping_set.all %}
+                    <div class="lh-1">
+                        <small>{{ topping.topping.name }}</small><br>
+                        <small>{{ topping.topping.price|intcomma }}</small><br>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="col-2 text-center fw-bold">
+                    {% if item.ordersize_set.exists %}
+                    <div class="lh-1">
+                        <small>{{ item.ordersize_set.first.size.name }}</small><br>
+                        <small>{{ item.ordersize_set.first.size.price|intcomma }}</small><br>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-2 text-center fw-bold">
+                    {% if item.ordersugar_set.exists %}
+                    <div class="lh-1">
+                        <small>{{ item.ordersugar_set.first.sugar.name }}</small><br>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-2 text-center fw-bold">
+                    <div class="lh-1">
+                        <small>{{ item.total|intcomma }}</small><br>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <hr>
+            <div class="d-flex w-100 align-items-end">
+                <div class="col-6 text-start fw-bold">Total</div>
+                <div class="col-6 text-end fw-bold">{{ transaction.grand_total|intcomma }}</div>
+            </div>
+            <div class="d-flex w-100 align-items-end">
+                <div class="col-6 text-start fw-bold">Tax <small>(inclusive)</small>: {{ transaction.tax|intcomma }}%</div>
+                <div class="col-6 text-end fw-bold">{{ transaction.tax_amount|intcomma|floatformat:2 }}</div>
+            </div>
+            <div class="d-flex w-100 align-items-end">
+                <div class="col-6 text-start fw-bold">Tenedered</div>
+                <div class="col-6 text-end fw-bold">{{ transaction.tendered_amount|intcomma }}</div>
+            </div>
+            <div class="d-flex w-100 align-items-end">
+                <div class="col-6 text-start fw-bold">Change</div>
+                <div class="col-6 text-end fw-bold">{{ transaction.amount_change|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div class="clear-fix py-3"></div>
+    <div class="d-flex w-100 justify-content-end">
+        <button class="btn btn-light bg-gradient border rounded-0 btn-sm me-1" type="button" id="receipt_print"><i class="mdi mdi-printer"></i> Print</button>
+        <button class="btn btn-secondary bg-gradient border rounded-0 btn-sm" type="button" data-bs-dismiss="modal"><i class="mdi mdi-close"></i> Close</button>
+    </div>
+</div>
+<script>
+    $(function() {
+        $('#receipt_print').click(function() {
+            var head = $('head').clone()
+            var p = $('#outprint').clone()
+            var el = $("<div>")
+            head.append('<style>body{background-color:unset !important}</style>')
+            el.append(head)
+            el.find('title').text("Receipt - Print View")
+            el.append(p)
+            start_loader()
+            var nw = window.open('', '_blank', "width=800,height=800,left=300, top = 200")
+            nw.document.write(el.html())
+            nw.document.close()
+            setTimeout(() => {
+                nw.print()
+                setTimeout(() => {
+                    nw.close()
+                    end_loader()
+                }, 250)
+            }, 300)
+        })
+    })
+</script>

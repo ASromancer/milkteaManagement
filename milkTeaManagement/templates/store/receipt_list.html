@@ -1,0 +1,51 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Receipt List{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="box-title">Receipt List </h4>
+            </div>
+            <div class="card-body--">
+                <div class="table-stats order-table ov-h">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th class="serial">Receipt</th>
+                            <th>Supplier</th>
+                            <th>Ingredient</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                            <th>Date</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if receipts %}
+                        {% for receipt in receipts %}
+                        <tr>
+                            <td class="serial">#{{ receipt.id }}</td>
+                            <td>{{ receipt.supplier }}</td>
+                            <td>{{ receipt.ingredient }}</td>
+                            <td>{{ receipt.quantity }}</td>
+                            <td>{{ receipt.price }}</td>
+                            <td>{{ receipt.total }}</td>
+                            <td>{{ receipt.date_created }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td>No Receipt Data</td>
+                        </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div> <!-- /.table-stats -->
+            </div>
+        </div> <!-- /.card -->
+    </div>  <!-- /.col-lg-8 -->
+</div>
+{% endblock content %}

@@ -1,0 +1,46 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Recipe Detail{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="box-title">{{ product.name }}</h4>
+            </div>
+            <div class="card-body--">
+                <div class="table-stats order-table ov-h">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th class="serial">#</th>
+                            <th>Ingredient</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if recipe_ingredient %}
+                        {% for recipe_ingredient in recipe_ingredient %}
+                        <tr>
+                            <td class="serial">{{ forloop.counter }}</td>
+                            <td>{{ recipe_ingredient.ingredient.name }}</td>
+                            <td>{{ recipe_ingredient.quantity }}</td>
+                            <td>{{ recipe_ingredient.ingredient.unit }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td>No Drop Data</td>
+                        </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div> <!-- /.table-stats -->
+            </div>
+        </div> <!-- /.card -->
+    </div>  <!-- /.col-lg-8 -->
+</div>
+
+{% endblock content %}

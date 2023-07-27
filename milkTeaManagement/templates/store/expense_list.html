@@ -1,0 +1,141 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Expense List{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="box-title">Expense List </h4>
+            </div>
+            <div class="card-body--">
+                <div class="table-stats order-table ov-h">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th class="serial">#</th>
+                            <th>Expense</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if expenses %}
+                        {% for expense in expenses %}
+                        <tr>
+                            <td class="serial">{{ forloop.counter }}</td>
+                            <td>{{ expense.ingredient }}</td>
+                            <td>{{ expense.date_created }}</td>
+                            <td>
+                                <button data-ingredient-id="{{ expense.ingredient.id }}"
+                                        data-expense-id="{{ expense.pk }}"
+                                        type="button"
+                                        class="createButton btn btn-success btn-sm">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td>No Expense Data</td>
+                        </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div> <!-- /.table-stats -->
+            </div>
+        </div> <!-- /.card -->
+    </div>  <!-- /.col-lg-8 -->
+</div>
+
+<div class="modal" id="createModal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close" id="createModalClose">&times;</span>
+        <div class="card-body">
+            <form id="createForm" novalidate="novalidate" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="ingredientIdInput" name="ingredient_id">
+                <input type="hidden" id="expenseIdInput" name="expense_id">
+                <div class="form-group">
+                    <label for="supplier" class="control-label mb-1">Supplier</label>
+                    <textarea id="supplierInput" name="description" class="form-control" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="quantity" class="control-label mb-1">Quantity</label>
+                    <input type="text" id="quantityInput" name="quantity" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="price" class="control-label mb-1">Price</label>
+                    <input type="text" id="priceInput" name="price" class="form-control" required>
+                </div>
+                <div>
+                    <button id="createButton" type="submit" class="btn btn-lg btn-success btn-block">
+                        <span id="payment-button-amount">Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Create button click event
+    $('.createButton').click(function() {
+        var ingredientId = $(this).data('ingredient-id');
+        var expenseId = $(this).data('expense-id');
+
+        // Set the data in the create form
+        $('#ingredientIdInput').val(ingredientId);
+        $('#expenseIdInput').val(expenseId);
+        // Open the update modal
+        $('#createModal').css('display', 'block');
+    });
+
+    // Create form submit event
+    $('#createForm').submit(function(event) {
+        event.preventDefault();
+
+        var ingredientId = $('#ingredientIdInput').val();
+        var supplier = $('#supplierInput').val();
+        var quantity = $('#quantityInput').val();
+        var price = $('#priceInput').val();
+        var expenseId = $('#expenseIdInput').val();
+
+        var formData = new FormData();
+        formData.append('ingredient_id', ingredientId);
+        formData.append('supplier', supplier);
+        formData.append('quantity', quantity);
+        formData.append('price', price);
+        formData.append('expense_id', expenseId);
+
+        // Perform the create request using AJAX
+        $.ajax({
+            url: '{% url "create-receipt" %}',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                // Handle the success response
+                console.log(response.status);
+                // Reload the product list page
+                window.location.href = '{% url "receipt-list" %}';
+            },
+            error: function(response) {
+                console.log(response.status);
+            }
+        });
+    });
+
+    // Close create modal event
+    $('#createModalClose').click(function() {
+        $('#createModal').css('display', 'none');
+    });
+});
+
+</script>
+{% endblock content %}

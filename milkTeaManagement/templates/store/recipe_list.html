@@ -1,0 +1,110 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Recipe List{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="box-title">Recipe List </h4>
+            </div>
+            <div class="card-body--">
+                <div class="table-stats order-table ov-h">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th class="serial">#</th>
+                            <th>Product</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if recipe %}
+                        {% for recipe in recipe %}
+                        <tr>
+                            <td class="serial">{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'recipe-list' recipe.product.id %} ">{{ recipe.product }}</a>
+                            </td>
+                            <td>
+                                <button type="button" class="deleteButton btn btn-success btn-sm"
+                                        data-recipe-id="{{ recipe.product.id }}">
+                                    <i class="fa-sharp fa-solid fa-delete-left"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td>No Drop Data</td>
+                        </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div> <!-- /.table-stats -->
+            </div>
+        </div> <!-- /.card -->
+    </div>  <!-- /.col-lg-8 -->
+</div>
+
+<!-- Delete Modal -->
+<div class="modal" id="deleteModal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close" id="deleteModalClose">&times;</span>
+        <div class="card-body">
+            <h4>Confirmation</h4>
+            <p>Are you sure you want to delete this recipe?</p>
+            <button id="deleteConfirmButton" class="btn btn-lg btn-danger btn-block">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Delete button click event
+    $('.deleteButton').click(function() {
+        var recipeId = $(this).data('recipe-id');
+
+        // Set the recipe ID in the delete modal's data attribute
+        $('#deleteConfirmButton').data('recipe-id', recipeId);
+
+        // Open the delete modal
+        $('#deleteModal').css('display', 'block');
+    });
+
+    // Delete confirm button click event
+    $('#deleteConfirmButton').click(function() {
+        var recipeId = $(this).data('recipe-id');
+
+        // Perform the delete request using AJAX
+        $.ajax({
+            url: '/delete-recipe/',
+            type: 'POST',
+            data: {
+                'recipe_id': recipeId,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function(response) {
+                // Handle the success response
+                console.log(response.status);
+                // Reload the recipe list page
+                window.location.reload();
+            },
+            error: function(response) {
+                // Handle the error response
+                console.log(response.status);
+            }
+        });
+    });
+
+    // Close delete modal event
+    $('#deleteModalClose').click(function() {
+        $('#deleteModal').css('display', 'none');
+    });
+});
+
+</script>
+{% endblock content %}

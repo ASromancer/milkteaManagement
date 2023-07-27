@@ -1,0 +1,197 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Topping List{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="box-title">Topping List </h4>
+            </div>
+            <div class="card-body--">
+                <div class="table-stats order-table ov-h">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th class="serial">#</th>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if toppings %}
+                        {% for topping in toppings %}
+                        <tr>
+                            <td class="serial">{{ forloop.counter }}</td>
+                            <td>{{ topping.name }}</td>
+                            <td>{{ topping.price }} VNĐ</td>
+                            <td>
+                                <button data-topping-id="{{ topping.id }}" type="button"
+                                        class="editButton btn btn-success btn-sm">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button type="button" class="deleteButton btn btn-success btn-sm"
+                                        data-topping-id="{{ topping.id }}">
+                                    <i class="fa-sharp fa-solid fa-delete-left"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td>No Drop Data</td>
+                        </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div> <!-- /.table-stats -->
+            </div>
+        </div> <!-- /.card -->
+    </div>  <!-- /.col-lg-8 -->
+
+
+</div>
+
+<!-- Update Modal -->
+<div class="modal" id="updateModal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close" id="updateModalClose">&times;</span>
+        <div class="card-body">
+            <form id="updateForm" novalidate="novalidate">
+                {% csrf_token %}
+                <input type="hidden" id="toppingIdInput" name="topping_id">
+                <div class="form-group">
+                    <label for="name" class="control-label mb-1">Name</label>
+                    <input type="text" id="newNameInput" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="price" class="control-label mb-1">Price</label>
+                    <input type="text" id="newPriceInput" name="price" class="form-control" required>
+                </div>
+                <div>
+                    <button id="updateButton" type="submit" class="btn btn-lg btn-success btn-block">
+                        <span id="payment-button-amount">Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Delete Modal -->
+<div class="modal" id="deleteModal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close" id="deleteModalClose">&times;</span>
+        <div class="card-body">
+            <h4>Confirmation</h4>
+            <p>Are you sure you want to delete this Topping?</p>
+            <button id="deleteConfirmButton" class="btn btn-lg btn-danger btn-block">Delete</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+$(document).ready(function() {
+    // Update button click event
+        $('.editButton').click(function() {
+            var toppingId = $(this).data('topping-id');
+            var toppingName = $(this).closest('tr').find('td:nth-child(2)').text();
+            var toppingPrice = $(this).closest('tr').find('td:nth-child(3)').text().replace(' VNĐ', '');
+
+            // Set the product data in the update form
+            $('#toppingIdInput').val(toppingId);
+            $('#newNameInput').val(toppingName);
+            $('#newPriceInput').val(toppingPrice);
+
+            // Open the update modal
+            $('#updateModal').css('display', 'block');
+        });
+
+    // Delete button click event
+    $('.deleteButton').click(function() {
+        var toppingId = $(this).data('topping-id');
+
+        // Set the product ID in the delete modal's data attribute
+        $('#deleteConfirmButton').data('topping-id', toppingId);
+
+        // Open the delete modal
+        $('#deleteModal').css('display', 'block');
+    });
+
+    // Update form submit event
+        $('#updateForm').submit(function(event) {
+            event.preventDefault();
+
+            var toppingId = $('#toppingIdInput').val();
+            var newName = $('#newNameInput').val();
+            var newPrice = $('#newPriceInput').val();
+
+            var formData = new FormData();
+            formData.append('topping_id', toppingId);
+            formData.append('name', newName);
+            formData.append('price', newPrice);
+
+            // Perform the update request using AJAX
+            $.ajax({
+                url: '{% url "update-topping" %}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    // Handle the success response
+                    console.log(response.status);
+                    // Reload the product list page
+                    window.location.reload();
+                },
+                error: function(response) {
+                    console.log(response.status);
+                }
+            });
+        });
+
+    // Delete confirm button click event
+    $('#deleteConfirmButton').click(function() {
+        var toppingId = $(this).data('topping-id');
+
+        // Perform the delete request using AJAX
+        $.ajax({
+            url: '/delete-topping/',
+            type: 'POST',
+            data: {
+                'topping_id': toppingId,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function(response) {
+                // Handle the success response
+                console.log(response.status);
+                // Reload the product list page
+                window.location.reload();
+            },
+            error: function(response) {
+                // Handle the error response
+                console.log(response.status);
+            }
+        });
+    });
+
+    // Close update modal event
+    $('#updateModalClose').click(function() {
+        $('#updateModal').css('display', 'none');
+    });
+
+    // Close delete modal event
+    $('#deleteModalClose').click(function() {
+        $('#deleteModal').css('display', 'none');
+    });
+});
+
+</script>
+{% endblock content %}
