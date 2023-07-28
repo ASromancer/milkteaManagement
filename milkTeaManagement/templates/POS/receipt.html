@@ -19,17 +19,19 @@
         </div>
         <div class="clear-fix py-3"></div>
         <div class="lh-1">
-            <div class="d-flex w-100 align-items-end border-bottom">
-                <div class="col-2 text-center fw-bold">Qty</div>
+            <div class="d-flex w-100 align-items-end">
+                <div class="col-1 text-center fw-bold">Qty</div>
                 <div class="col-2 text-center fw-bold">Product</div>
                 <div class="col-2 text-center fw-bold">Toppings</div>
                 <div class="col-2 text-center fw-bold">Size</div>
                 <div class="col-2 text-center fw-bold">Sugar</div>
+                <div class="col-1 text-center fw-bold">Ice</div>
                 <div class="col-2 text-center fw-bold">Amount</div>
             </div>
+            <hr>
             {% for item in salesItems %}
             <div class="d-flex w-100 align-items-end">
-                <div class="col-2 text-center fw-bold">
+                <div class="col-1 text-center fw-bold">
                     <div class="lh-1">
                         <small>{{ item.quantity|intcomma|floatformat:0 }}</small>
                     </div>
@@ -63,14 +65,21 @@
                     </div>
                     {% endif %}
                 </div>
+                <div class="col-1 text-center fw-bold">
+                    {% if item.orderice_set.exists %}
+                    <div class="lh-1">
+                        <small>{{ item.orderice_set.first.ice.name }}</small><br>
+                    </div>
+                    {% endif %}
+                </div>
                 <div class="col-2 text-center fw-bold">
                     <div class="lh-1">
                         <small>{{ item.total|intcomma }}</small><br>
                     </div>
                 </div>
             </div>
-            {% endfor %}
             <hr>
+            {% endfor %}
             <div class="d-flex w-100 align-items-end">
                 <div class="col-6 text-start fw-bold">Total</div>
                 <div class="col-6 text-end fw-bold">{{ transaction.grand_total|intcomma }}</div>

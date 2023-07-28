@@ -28,7 +28,7 @@ from django.views.generic.edit import (
 from .forms import CategoryForm, ProductForm, IngredientForm, RecipeForm, RecipeIngredientForm, \
     SizeForm, ToppingForm, ReceiptForm, RecipeIngredientFormSet, GroupSelectionForm, UserCreationForm
 from .models import Category, Product, Ingredient, Recipe, Order, OrderItem, Expense, RecipeIngredient, OrderTopping, \
-    Topping, Size, Receipt, OrderSize, OrderSugar, Sugar
+    Topping, Size, Receipt, OrderSize, OrderSugar, Sugar, Ice, OrderIce
 
 
 # Access modifiers
@@ -591,6 +591,7 @@ def pos(request):
     toppings = Topping.objects.all()
     sizes = Size.objects.all().order_by('-id')
     sugars = Sugar.objects.all()
+    ices = Ice.objects.all()
     product_json = []
     for product in products:
         product_json.append({'id': product.id, 'name': product.name, 'price': float(product.price)})
@@ -600,6 +601,7 @@ def pos(request):
         'toppings': toppings,
         'sizes': sizes,
         'sugars': sugars,
+        'ices': ices,
         'product_json': json.dumps(product_json)
     }
     return render(request, 'POS/pos.html', context)
@@ -621,10 +623,8 @@ def save_pos(request):
     resp = {'status': 'failed', 'msg': ''}
     data = request.POST
     print(data)
-    toppings = data.getlist('order_item_toppings[]')
-
-    # Remove any empty strings from toppings list (to handle empty checkboxes)
-    toppings = [topping for topping in toppings if topping]
+    selected_toppings_data = data.get('selectedToppings', '[]')
+    selected_toppings = json.loads(selected_toppings_data)
 
     pref = datetime.now().year + datetime.now().year
     i = 1
@@ -657,8 +657,9 @@ def save_pos(request):
             order_item.total = total
             order_item.save()
 
-            if toppings:
-                for topping_id in toppings:
+            toppings_for_product = selected_toppings[i]
+            if toppings_for_product:
+                for topping_id in toppings_for_product:
                     topping = Topping.objects.filter(id=int(topping_id)).first()
                     OrderTopping.objects.create(order_item=order_item, topping=topping)
 
@@ -666,9 +667,11 @@ def save_pos(request):
 
             size_keys = [key for key in all_keys if key.startswith('order_item_size_')]
             sugar_keys = [key for key in all_keys if key.startswith('order_item_sugar_')]
+            ice_keys = [key for key in all_keys if key.startswith('order_item_ice_')]
 
             size_id = int(data.get(size_keys[i], 0))
             sugar_id = int(data.get(sugar_keys[i], 0))
+            ice_id = int(data.get(ice_keys[i], 0))
 
             if size_id > 0:
                 size = Size.objects.filter(id=size_id).first()
@@ -677,6 +680,10 @@ def save_pos(request):
             if sugar_id > 0:
                 sugar = Sugar.objects.filter(id=sugar_id).first()
                 OrderSugar.objects.create(order_item=order_item, sugar=sugar)
+
+            if ice_id > 0:
+                ice = Ice.objects.filter(id=ice_id).first()
+                OrderIce.objects.create(order_item=order_item, ice=ice)
 
             i += int(1)
 
@@ -726,7 +733,8 @@ def receipt(request):
     order_items = OrderItem.objects.filter(order=sales).prefetch_related(
         Prefetch('ordertopping_set', queryset=OrderTopping.objects.select_related('topping')),
         Prefetch('ordersize_set', queryset=OrderSize.objects.select_related('size')),
-        Prefetch('ordersugar_set', queryset=OrderSugar.objects.select_related('sugar'))
+        Prefetch('ordersugar_set', queryset=OrderSugar.objects.select_related('sugar')),
+        Prefetch('orderice_set', queryset=OrderIce.objects.select_related('ice')),
     )
 
     context = {

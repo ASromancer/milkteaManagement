@@ -55,6 +55,13 @@ class Sugar(models.Model):
         return self.name
 
 
+class Ice(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
 class Ingredient(models.Model):
     name = models.CharField(max_length=100)
     quantity = models.PositiveIntegerField(default=0)
@@ -113,6 +120,11 @@ class OrderSize(models.Model):
 class OrderSugar(models.Model):
     order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE)
     sugar = models.ForeignKey(Sugar, on_delete=models.CASCADE)
+
+
+class OrderIce(models.Model):
+    order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE)
+    ice = models.ForeignKey(Ice, on_delete=models.CASCADE)
 
 
 @receiver(post_save, sender=OrderItem)

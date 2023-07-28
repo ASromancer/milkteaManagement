@@ -47,10 +47,11 @@
                             <colgroup>
                                 <col width="5%">
                                 <col width="15%">
-                                <col width="25%"> <!-- Adjusted width for Product column -->
-                                <col width="15%"> <!-- Added width for Toppings column -->
+                                <col width="15%"> <!-- Adjusted width for Product column -->
+                                <col width="10%"> <!-- Added width for Toppings column -->
                                 <col width="15%"> <!-- Added width for Size column -->
                                 <col width="15%"> <!-- Added width for Sugar column -->
+                                <col width="15%"> <!-- Added width for Ice column -->
                                 <col width="10%"> <!-- Adjusted width for Price column -->
                                 <col width="10%"> <!-- Adjusted width for Total column -->
                             </colgroup>
@@ -63,6 +64,7 @@
                                 <th class="py-1 px-2 text-center  text-light">Toppings</th>
                                 <th class="py-1 px-2 text-center  text-light">Size</th>
                                 <th class="py-1 px-2 text-center  text-light">Sugar</th>
+                                <th class="py-1 px-2 text-center  text-light">Ice</th>
                                 <th class="py-1 px-2 text-center  text-light">Total</th>
                             </tr>
                             </thead>
@@ -172,6 +174,20 @@
                 {% endfor %}
             </div>
         </td>
+        <td class="px-2 py-1">
+            <!-- Sugar radio buttons -->
+            <div class="form-check">
+                <h6>Ice:</h6>
+                {% for ice in ices %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="order_item_ice" value="{{ ice.pk }}"
+                           {% if forloop.first %}checked{% endif %}
+                           id="ice_{{ ice.pk }}_{{ forloop.counter }}">
+                    <label class="form-check-label" for="ice_{{ ice.pk }}_{{ forloop.counter }}">{{ ice.name }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </td>
         <td class="px-2 py-1 product_total text-end">
         </td>
     </tr>
@@ -268,6 +284,7 @@
                 var unique_id = Date.now();
                 tr.find('[name="order_item_size"]').attr('name', 'order_item_size_' + unique_id);
                 tr.find('[name="order_item_sugar"]').attr('name', 'order_item_sugar_' + unique_id);
+                tr.find('[name="order_item_ice"]').attr('name', 'order_item_ice_' + unique_id);
 
                 $('#POS-field table tbody').append(tr);
                 $('#product-id').val('').trigger('change');
@@ -310,6 +327,19 @@
             el.hide();
 
             var formData = new FormData(_this[0]);
+
+            var selectedToppings = [];
+
+            $('#POS-field table tbody tr').each(function() {
+                var toppingsArray = [];
+                $(this).find('.topping-checkbox:checked').each(function() {
+                    var toppingId = $(this).val();
+                    toppingsArray.push(toppingId);
+                });
+                selectedToppings.push(toppingsArray);
+            });
+
+            formData.append('selectedToppings', JSON.stringify(selectedToppings));
 
             start_loader();
             $.ajax({
