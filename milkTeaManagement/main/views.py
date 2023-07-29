@@ -637,7 +637,8 @@ def save_pos(request):
     code = str(pref) + str(code)
 
     try:
-        sales = Order(code=code, sub_total=data['sub_total'], tax=data['tax'], tax_amount=data['tax_amount'],
+        user_id = request.user.id
+        sales = Order(user_id=user_id, code=code, sub_total=data['sub_total'], tax=data['tax'], tax_amount=data['tax_amount'],
                       grand_total=data['grand_total'], tendered_amount=data['tendered_amount'],
                       amount_change=data['amount_change'])
         sales.save()

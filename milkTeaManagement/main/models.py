@@ -1,5 +1,5 @@
 from _decimal import Decimal
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.db import models
 from django.db.models import Sum
 from django.db.models.signals import post_save, pre_save
@@ -85,6 +85,7 @@ class RecipeIngredient(models.Model):
 
 
 class Order(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     code = models.CharField(max_length=100)
     sub_total = models.FloatField(default=0)
     grand_total = models.FloatField(default=0)
