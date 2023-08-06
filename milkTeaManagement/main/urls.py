@@ -14,7 +14,8 @@ from .views import dashboard, CategoryListView, create_category, create_product,
     create_topping, size_list, create_size, update_topping, delete_topping, update_size, delete_size, expense_list, \
     create_receipt, receipt_list, create_recipe, pos, receipt, salesList, save_pos, checkout_modal, \
     get_category_revenue_data, get_product_revenue_data, get_weekly_revenue_data, get_monthly_revenue_data, \
-    get_receipt_expenses_by_month_data, create_user, user_list
+    get_receipt_expenses_by_month_data, create_user, user_list, add_receipt, active_user, show_report, \
+    get_orders_by_date_range
 
 router = routers.DefaultRouter()
 router.register(r'categories', CategoryViewSet)
@@ -46,7 +47,13 @@ urlpatterns = [
 
     # API
     path('api/', include(router.urls)),
+
+    # Dashboard
     path('', dashboard, name='dashboard'),
+
+    # Report
+    path('report-page/', show_report, name='report-page'),
+    path('get_orders_by_date_range/', get_orders_by_date_range, name='get_orders_by_date_range'),
 
     # App
     path('category-list/', CategoryListView.as_view(), name='category-list'),
@@ -81,13 +88,11 @@ urlpatterns = [
     path('update-recipe-ingredient/', update_recipe_ingredient, name='delete-recipe'),
     path('delete-recipe-ingredient/', delete_recipe_ingredient, name='delete-recipe'),
 
-    # path('order-list/', OrderListView.as_view(), name='order-list'),
-    # path('order-item/<order_id>', order_item, name='order-item'),
-
     path('expense-list/', expense_list, name='expense-list'),
 
     path('receipt-list/', receipt_list, name='receipt-list'),
     path('create-receipt/', create_receipt, name='create-receipt'),
+    path('add-receipt/', add_receipt, name='add-receipt'),
 
     # POS
     path('pos', pos, name="pos-page"),
@@ -101,11 +106,13 @@ urlpatterns = [
     path('get_weekly_revenue_data/', get_weekly_revenue_data, name='get_weekly_revenue_data'),
     path('get_product_revenue_data/', get_product_revenue_data, name='get_product_revenue_data'),
     path('get_category_revenue_data/', get_category_revenue_data, name='get_category_revenue_data'),
-    path('get_receipt_expenses_by_month_data/', get_receipt_expenses_by_month_data, name='get_receipt_expenses_by_month_data'),
+    path('get_receipt_expenses_by_month_data/', get_receipt_expenses_by_month_data,
+         name='get_receipt_expenses_by_month_data'),
 
     # User
     path('create-user/', create_user, name='create-user'),
     path('user-list/', user_list, name='user-list'),
+    path('active-user/', active_user, name='active-user'),
 ]
 
 if settings.DEBUG:

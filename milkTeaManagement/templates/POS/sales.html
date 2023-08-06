@@ -19,38 +19,41 @@
                     <col width="15%">
                 </colgroup>
                 <thead>
-                    <tr>
-                        <th class="text-center py-1">#</th>
-                        <th class="text-center py-1">DateTime</th>
-                        <th class="text-center py-1">Trans. Code</th>
-                        <th class="text-center py-1">Total</th>
-                        <th class="text-center py-1">Tax Inclusive</th>
-                        <th class="text-center py-1">Items</th>
-                        <th class="text-center py-1">Action</th>
-                    </tr>
+                <tr>
+                    <th class="text-center py-1">#</th>
+                    <th class="text-center py-1">DateTime</th>
+                    <th class="text-center py-1">Trans. Code</th>
+                    <th class="text-center py-1">Total</th>
+                    <th class="text-center py-1">Tax Inclusive</th>
+                    <th class="text-center py-1">Items</th>
+                    <th class="text-center py-1">Action</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {% for sale in sale_data %}
-                    <tr>
-                        <td class="px-2 py-1 text-center">{{ sale.id }}</td>
-                        <td class="px-2 py-1 text-center">{{ sale.date_added|date:'Y-m-d H:i' }}</td>
-                        <td class="px-2 py-1 text-center">{{ sale.code }}</td>
-                        <td class="px-2 py-1 text-center">{{ sale.grand_total|intcomma }}</td>
-                        <td class="px-2 py-1 text-center">({{ sale.tax }}%) {{ sale.tax_amount|intcomma:2 }}</td>
-                        <td class="px-2 py-1 text-center">{{ sale.item_count|intcomma }}</td>
-                        <td class="px-2 py-1 text-center">
-                            <button class="mdc-button mdc-button--raised p-1 icon-button filled-button--light mdc-ripple-upgraded view-data" type="button" data-id="{{ sale.id }}" title="View Receipt">
-                                <i class="material-icons mdc-button__icon">receipt</i>
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                {% for sale in sale_data %}
+                <tr>
+                    <td class="px-2 py-1 text-center">{{ sale.id }}</td>
+                    <td class="px-2 py-1 text-center">{{ sale.date_added|date:'Y-m-d H:i' }}</td>
+                    <td class="px-2 py-1 text-center">{{ sale.code }}</td>
+                    <td class="px-2 py-1 text-center">{{ sale.grand_total|intcomma }}</td>
+                    <td class="px-2 py-1 text-center">({{ sale.tax }}%) {{ sale.tax_amount|intcomma:2 }}</td>
+                    <td class="px-2 py-1 text-center">{{ sale.item_count|intcomma }}</td>
+                    <td class="px-2 py-1 text-center">
+                        <button class="mdc-button mdc-button--raised p-1 icon-button filled-button--light mdc-ripple-upgraded view-data"
+                                type="button" data-id="{{ sale.id }}" title="View Receipt">
+                            <i class="material-icons mdc-button__icon">receipt</i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-{% endblock pageContent %} {% block ScriptBlock %}
+
+{% endblock pageContent %}
+{% block ScriptBlock %}
 <script>
     $(function() {
         $('.view-data').click(function() {

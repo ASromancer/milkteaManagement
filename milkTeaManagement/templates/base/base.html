@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{% endblock title %}</title>
-
+  <link rel="shortcut icon" href="https://firebasestorage.googleapis.com/v0/b/novel-79dc6.appspot.com/o/Nude%20Boba%20Milk%20Tea%20Logo.png?alt=media&token=80f6e88f-2079-4afc-98fa-dd2faeb81079"/>
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
@@ -88,10 +88,10 @@
         <a href="{% url 'dashboard' %}" class="nav-link">Home</a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="#" class="nav-link">Contact</a>
+        <a href="{% url 'pos-page' %}" class="nav-link">POS</a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="{% url 'pos-page' %}" class="nav-link">Pos</a>
+        <a href="{% url 'report-page' %}" class="nav-link">Report</a>
       </li>
     </ul>
 

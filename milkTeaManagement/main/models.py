@@ -65,7 +65,7 @@ class Ice(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(max_length=100)
     quantity = models.PositiveIntegerField(default=0)
-    unit = models.CharField(max_length=100, default='kg')
+    unit = models.CharField(max_length=100, default='g')
 
     def __str__(self):
         return self.name

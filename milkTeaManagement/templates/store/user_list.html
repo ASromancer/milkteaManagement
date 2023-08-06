@@ -4,49 +4,120 @@
 {% block title %}User List{% endblock title %}
 
 {% block content %}
-<div class="content-wrapper">
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">User List</h1>
-                </div>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="box-title">User List </h4>
             </div>
-        </div>
-    </div>
-    <section class="content">
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-body">
-                    <table class="table table-bordered table-striped">
+            <div class="card-body--">
+                <div class="table-stats order-table ov-h">
+                    <table class="table table-bordered">
                         <thead>
-                            <tr>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Groups</th>
-                            </tr>
+                        <tr>
+                            <th class="serial">#</th>
+                            <th>Username</th>
+                            <th>Firstname</th>
+                            <th>Lastname</th>
+                            <th>Groups</th>
+                            <th>Is active</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {% for user in users %}
-                                <tr>
-                                    <td>{{ user.username }}</td>
-                                    <td>{{ user.email }}</td>
-                                    <td>{{ user.first_name }}</td>
-                                    <td>{{ user.last_name }}</td>
-                                    <td>
-                                        {% for group in user.groups.all %}
-                                            {{ group.name }}{% if not forloop.last %}, {% endif %}
-                                        {% endfor %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
+                        {% if users %}
+                        {% for user in users %}
+                        <tr>
+                            <td class="serial">{{ forloop.counter }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.first_name }}</td>
+                            <td>{{ user.last_name }}</td>
+                            <td>
+                                {% for group in user.groups.all %}
+                                {{ group.name }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                <button type="button" class="activeButton btn btn-sm"
+                                        data-user-id="{{ user.id }}" data-user-active="True">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                </button>
+                                {% else %}
+                                <button type="button" class="activeButton btn btn-sm"
+                                        data-user-id="{{ user.id }}" data-user-active="False">
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td>No Drop Data</td>
+                        </tr>
+                        {% endif %}
                         </tbody>
                     </table>
-                </div>
+                </div> <!-- /.table-stats -->
             </div>
-        </div>
-    </section>
+        </div> <!-- /.card -->
+    </div>  <!-- /.col-lg-8 -->
 </div>
+
+<div class="modal" id="activeModal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close" id="activeModalClose">&times;</span>
+        <div class="card-body">
+            <h4>Confirmation</h4>
+            <p>Are you sure?</p>
+            <button id="activeConfirmButton" class="btn btn-lg btn-danger btn-block">Submit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('.activeButton').click(function() {
+        var userId = $(this).data('user-id');
+        var userActive = $(this).data('user-active');
+
+        $('#activeConfirmButton').data('user-id', userId);
+        $('#activeConfirmButton').data('user-active', userActive);
+
+
+        $('#activeModal').css('display', 'block');
+    });
+
+    $('#activeConfirmButton').click(function() {
+        var userId = $(this).data('user-id');
+        var userActive = $(this).data('user-active');
+
+        $.ajax({
+            url: '/active-user/',
+            type: 'POST',
+            data: {
+                'user_id': userId,
+                'user_active': userActive,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function(response) {
+                console.log(response.status);
+                window.location.reload();
+            },
+            error: function(response) {
+                console.log(response.status);
+            }
+        });
+    });
+
+    // Close delete modal event
+    $('#activeModalClose').click(function() {
+        $('#activeModal').css('display', 'none');
+    });
+});
+
+</script>
+
 {% endblock content %}

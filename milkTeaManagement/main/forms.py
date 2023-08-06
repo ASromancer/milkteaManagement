@@ -50,10 +50,9 @@ class ProductForm(forms.ModelForm):
 class IngredientForm(forms.ModelForm):
     class Meta:
         model = Ingredient
-        fields = ['name', 'quantity', 'unit']
+        fields = ['name', 'unit']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'name'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'id': 'quantity'}),
             'unit': forms.TextInput(attrs={'class': 'form-control', 'id': 'unit'}),
         }
 
@@ -79,7 +78,13 @@ RecipeIngredientFormSet = inlineformset_factory(
 class ReceiptForm(forms.ModelForm):
     class Meta:
         model = Receipt
-        fields = ['ingredient', 'supplier', 'quantity', 'price']
+        fields = ['supplier', 'ingredient', 'quantity', 'price']
+        widgets = {
+            'supplier': forms.TextInput(attrs={'class': 'form-control', 'id': 'supplier'}),
+            'ingredient': forms.Select(attrs={'class': 'form-control', 'id': 'ingredient'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'id': 'quantity'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control', 'id': 'price'}),
+        }
 
 
 class UserCreationForm(forms.ModelForm):

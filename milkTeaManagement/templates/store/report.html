@@ -1,0 +1,190 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+{% block title %}Order List{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="box-title">Order List </h4>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="form-group mr-3">
+                        <label for="from-date">From Date:</label>
+                        <input type="date" class="form-control" id="from-date">
+                    </div>
+
+                    <div class="form-group mr-3">
+                        <label for="to-date">To Date:</label>
+                        <input type="date" class="form-control" id="to-date">
+                    </div>
+
+                    <div class="form-group mr-3">
+                        <label for="report_print">Print</label>
+                        <button id="report_print" class="form-control btn btn-primary">Print</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body--">
+                <div class="table-stats order-table ov-h">
+                    <table class="table table-striped table-bordered">
+                        <colgroup>
+                            <col width="5%">
+                            <col width="20%">
+                            <col width="20%">
+                            <col width="25%">
+                            <col width="15%">
+                            <col width="15%">
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th class="text-center py-1">#</th>
+                            <th class="text-center py-1">DateTime</th>
+                            <th class="text-center py-1">Trans. Code</th>
+                            <th class="text-center py-1">Total</th>
+                            <th class="text-center py-1">Tax Inclusive</th>
+                            <th class="text-center py-1">Items</th>
+                            <th class="text-center py-1">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if sale_data %}
+                        {% for sale in sale_data %}
+                        <tr>
+                            <td class="px-2 py-1 text-center">{{ sale.id }}</td>
+                            <td class="px-2 py-1 text-center">{{ sale.date_added|date:'Y-m-d H:i' }}</td>
+                            <td class="px-2 py-1 text-center">{{ sale.code }}</td>
+                            <td class="px-2 py-1 text-center">{{ sale.grand_total|intcomma }}</td>
+                            <td class="px-2 py-1 text-center">({{ sale.tax }}%) {{ sale.tax_amount|intcomma:2 }}</td>
+                            <td class="px-2 py-1 text-center">{{ sale.item_count|intcomma }}</td>
+                            <td class="px-2 py-1 text-center">
+                                <button class="showButton btn btn-success btn-sm"
+                                        type="button" data-id="{{ sale.id }}" title="View Receipt">
+                                    <i class="fa-solid fa-bars"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td>No Drop Data</td>
+                        </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div> <!-- /.table-stats -->
+            </div>
+        </div> <!-- /.card -->
+    </div>  <!-- /.col-lg-8 -->
+</div>
+
+<div class="modal fade" id="uni_modal" role='dialog'>
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content rounded-0">
+            <span class="close" id="uniModalClose">&times;</span>
+            <div class="modal-header">
+                <h5 class="modal-title"></h5>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn  btn-sm btn-flat btn-primary rounded-0" id='submit'
+                        onclick="$('#uni_modal form').submit()">Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        $('.showButton').click(function() {
+            uni_modal("Transaction's Receipt", "{% url 'receipt-modal' %}?id=" + $(this).attr('data-id'))
+        });
+    });
+
+    $('#uniModalClose').click(function() {
+      $('#uni_modal').modal('hide');
+    });
+
+    $(function() {
+        $('#report_print').click(function() {
+            var fromDate = $('#from-date').val();
+            var toDate = $('#to-date').val();
+            printOrders(fromDate, toDate);
+        })
+    })
+
+    function printOrders(fromDate, toDate) {
+        start_loader();
+
+        $.ajax({
+            url: '{% url "get_orders_by_date_range" %}',
+            method: 'GET',
+            data: {
+                from_date: fromDate,
+                to_date: toDate
+            },
+            error: err => {
+                console.log();
+                alert("Please choose a date range");
+                end_loader();
+            },
+            success: function(resp) {
+                if (resp) {
+                    var printWindow = window.open('', '_blank', "width=800,height=800,left=300, top=200");
+                    printWindow.document.write(resp.html);
+                    printWindow.document.close();
+
+                    printWindow.onload = function() {
+                        printWindow.print();
+                        setTimeout(() => {
+                            printWindow.close();
+                            end_loader();
+                        }, 250);
+                    };
+                }
+            }
+        });
+    }
+
+
+    window.start_loader = function() {
+            $('body').removeClass('loaded')
+        }
+        window.end_loader = function() {
+            $('body').addClass('loaded')
+        }
+        window.uni_modal = function($title = '', $url = '', $size = "") {
+            start_loader()
+            $.ajax({
+                url: $url,
+                error: err => {
+                    console.log()
+                    alert("An error occured")
+                },
+                success: function(resp) {
+                    if (resp) {
+                        $('#uni_modal .modal-title').html($title);
+                        $('#uni_modal .modal-body').html(resp);
+                        if ($size != '') {
+                            $('#uni_modal .modal-dialog').addClass($size + ' modal-dialog-centered');
+                        } else {
+                            $('#uni_modal .modal-dialog').removeAttr("class").addClass("modal-dialog modal-md modal-dialog-centered");
+                            $('#uni_modal .modal-dialog').css("max-width", "650px");
+                        }
+                        $('#uni_modal').modal({
+                            backdrop: 'static',
+                            keyboard: false,
+                            focus: true
+                        });
+                        $('#uni_modal').modal('show');
+                        end_loader();
+                    }
+                }
+            })
+        }
+</script>
+{% endblock content %}
+

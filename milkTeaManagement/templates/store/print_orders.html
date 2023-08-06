@@ -1,0 +1,53 @@
+{% extends 'base/base.html' %}
+{% block title %}Orders List{% endblock title %}
+{% block content %}
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Orders List</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>From: {{ from_date }} - To: {{ to_date }}</p>
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Code</th>
+                                    <th>Sub Total</th>
+                                    <th>Grand Total</th>
+                                    <th>Tax Amount</th>
+                                    <th>Tax</th>
+                                    <th>Tendered Amount</th>
+                                    <th>Amount Change</th>
+                                    <th>Date Added</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>{{ order.pk }}</td>
+                                    <td>{{ order.code }}</td>
+                                    <td>{{ order.sub_total }}</td>
+                                    <td>{{ order.grand_total }}</td>
+                                    <td>{{ order.tax_amount }}</td>
+                                    <td>{{ order.tax }}</td>
+                                    <td>{{ order.tendered_amount }}</td>
+                                    <td>{{ order.amount_change }}</td>
+                                    <td>{{ order.date_added }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        <p class="text-right"><strong>Total Revenue: {{ total_revenue }}</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

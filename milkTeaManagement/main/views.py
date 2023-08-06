@@ -2,14 +2,14 @@ import calendar
 import json
 import sys
 from _pydecimal import Decimal
-
+from xhtml2pdf import pisa
 from django.contrib.auth.models import Group, User
 from django.db.models import F, Sum
 
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Prefetch
 from django.db.models.functions import ExtractWeek, ExtractMonth
-from django.utils import timezone
+from django.template.loader import get_template, render_to_string
 from rest_framework import viewsets
 from datetime import date, datetime, timedelta
 
@@ -109,23 +109,15 @@ def get_receipt_expenses_by_month_data(request):
 @login_required(login_url='login')
 @user_passes_test(lambda u: not u.groups.filter(name='staff_group').exists(), login_url='pos-page')
 def dashboard(request):
-    # Thống kê các số liệu liên quan
     categories = Category.objects.count()
     products = Product.objects.count()
     ingredients = Ingredient.objects.count()
-    recipes = Recipe.objects.count()
-    order_items = OrderItem.objects.count()
     expenses = Expense.objects.count()
 
-    # Gọi hàm revenue_statistics để lấy thông tin doanh thu
-
-    # Truyền dữ liệu vào context
     context = {
         'categories': categories,
         'products': products,
         'ingredients': ingredients,
-        'recipes': recipes,
-        'order_items': order_items,
         'expenses': expenses,
     }
 
@@ -550,6 +542,27 @@ def receipt_list(request):
     return render(request, 'store/receipt_list.html', {'receipts': receipts})
 
 
+@login_required(login_url='login')
+@user_passes_test(lambda u: not u.groups.filter(name='staff_group').exists(), login_url='pos-page')
+def add_receipt(request):
+    forms = ReceiptForm()
+    if request.method == 'POST':
+        forms = ReceiptForm(request.POST)
+        if forms.is_valid():
+            receipt = forms.save(commit=False)
+            selected_ingredient = forms.cleaned_data['ingredient']
+            quantity = forms.cleaned_data['quantity']
+            ingredient = Ingredient.objects.get(id=selected_ingredient.id)
+            receipt.save()
+            ingredient.quantity += int(quantity)
+            ingredient.save()
+            return redirect('receipt-list')
+    context = {
+        'form': forms
+    }
+    return render(request, 'store/addReceipt.html', context)
+
+
 @csrf_exempt
 def create_receipt(request):
     if request.method == 'POST':
@@ -587,7 +600,7 @@ def create_receipt(request):
 # POS
 @login_required
 def pos(request):
-    products = Product.objects.all()
+    products = Product.objects.filter(recipe__isnull=False)
     toppings = Topping.objects.all()
     sizes = Size.objects.all().order_by('-id')
     sugars = Sugar.objects.all()
@@ -638,7 +651,8 @@ def save_pos(request):
 
     try:
         user_id = request.user.id
-        sales = Order(user_id=user_id, code=code, sub_total=data['sub_total'], tax=data['tax'], tax_amount=data['tax_amount'],
+        sales = Order(user_id=user_id, code=code, sub_total=data['sub_total'], tax=data['tax'],
+                      tax_amount=data['tax_amount'],
                       grand_total=data['grand_total'], tendered_amount=data['tendered_amount'],
                       amount_change=data['amount_change'])
         sales.save()
@@ -647,10 +661,10 @@ def save_pos(request):
         for prod in data.getlist('product_id[]'):
             product_id = prod
             order_item = OrderItem()
-            order_item.order = sales  # Set the 'order' field to the related Order
+            order_item.order = sales
             product = Product.objects.filter(id=product_id).first()
             qty = int(data.getlist('qty[]')[i])
-            price = Decimal(data.getlist('price[]')[i])  # Convert to Decimal
+            price = Decimal(data.getlist('price[]')[i])
             order_item.product = product
             order_item.quantity = qty
             order_item.price = price
@@ -687,18 +701,28 @@ def save_pos(request):
                 OrderIce.objects.create(order_item=order_item, ice=ice)
 
             i += int(1)
-
         resp['status'] = 'success'
         resp['sale_id'] = sale_id
+        print(sale_id)
         messages.success(request, "Sale Record has been saved.")
     except Exception as e:
-        resp['msg'] = "An error occurred"
+        resp['msg'] = "Not enough ingredients to complete the sale"
         print("Unexpected error:", sys.exc_info()[0])
         print("Exception details:", e)
+        try:
+            last_order = Order.objects.last()
+            if last_order:
+                last_order.delete()
+                print("Last order has been deleted.")
+            else:
+                print("No orders exist.")
+        except Order.DoesNotExist:
+            print("No orders exist.")
     return HttpResponse(json.dumps(resp), content_type="application/json")
 
 
 @login_required
+@user_passes_test(lambda u: not u.groups.filter(name='staff_group').exists(), login_url='pos-page')
 def salesList(request):
     sales = Order.objects.all()
     sale_data = []
@@ -717,6 +741,43 @@ def salesList(request):
         'sale_data': sale_data,
     }
     return render(request, 'POS/sales.html', context)
+
+
+@login_required
+def show_report(request):
+    sales = Order.objects.all()
+    sale_data = []
+    for sale in sales:
+        data = {}
+        for field in sale._meta.get_fields(include_parents=False):
+            if field.related_model is None:
+                data[field.name] = getattr(sale, field.name)
+        data['items'] = OrderItem.objects.filter(order=sale).all()
+        data['item_count'] = len(data['items'])
+        if 'tax_amount' in data:
+            data['tax_amount'] = format(float(data['tax_amount']), '.2f')
+        sale_data.append(data)
+    context = {
+        'page_title': 'Sales Transactions',
+        'sale_data': sale_data,
+    }
+    return render(request, 'store/report.html', context)
+
+
+@login_required
+def get_orders_by_date_range(request):
+    if request.method == 'GET':
+        from_date = request.GET.get('from_date')
+        to_date = request.GET.get('to_date')
+
+        orders = Order.objects.filter(date_added__gte=from_date, date_added__lte=to_date).order_by('date_added')
+
+        total_revenue = orders.aggregate(Sum('grand_total'))['grand_total__sum']
+
+        context = {'orders': orders, 'from_date': from_date, 'to_date': to_date, 'total_revenue': total_revenue}
+        html = render_to_string('store/print_orders.html', context)
+
+        return JsonResponse({'html': html})
 
 
 @login_required
@@ -749,7 +810,7 @@ def receipt(request):
 @login_required
 @user_passes_test(lambda u: not u.groups.filter(name='staff_group').exists(), login_url='pos-page')
 def user_list(request):
-    users = User.objects.all()
+    users = User.objects.filter(is_superuser=False)
     return render(request, 'store/user_list.html', {'users': users})
 
 
@@ -777,6 +838,24 @@ def create_user(request):
 
     context = {'user_form': user_form, 'group_form': group_form}
     return render(request, 'store/addUser.html', context)
+
+
+def active_user(request):
+    if request.method == 'POST':
+        userId = request.POST.get('user_id')
+        userActive = request.POST.get('user_active');
+        print(userActive)
+
+        user = get_object_or_404(User, id=userId)
+        if userActive == 'True':
+            user.is_active = False
+        else:
+            user.is_active = True
+        user.save()
+        return JsonResponse({'status': 'success'})
+
+    # Return a JSON response indicating failure
+    return JsonResponse({'status': 'failure'})
 
 
 ################################
