@@ -2,7 +2,7 @@ from django import forms
 from django.forms import inlineformset_factory, formset_factory
 from django.contrib.auth.models import User, Group
 from .models import Category, Product, Ingredient, Recipe, RecipeIngredient, Order, OrderItem, OrderTopping, Topping, \
-    Size, Receipt
+    Size, Receipt, Sugar, Ice
 
 
 class CategoryForm(forms.ModelForm):
@@ -31,6 +31,24 @@ class SizeForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'name'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'id': 'price'}),
+        }
+
+
+class SugarForm(forms.ModelForm):
+    class Meta:
+        model = Sugar
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'name'}),
+        }
+
+
+class IceForm(forms.ModelForm):
+    class Meta:
+        model = Ice
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'name'}),
         }
 
 

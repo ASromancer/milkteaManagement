@@ -5,8 +5,10 @@ from rest_framework import routers, permissions
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
+
 from .views import CategoryViewSet, ProductViewSet, IngredientViewSet, RecipeViewSet, RecipeIngredientViewSet, \
-    OrderViewSet, OrderItemViewSet, OrderToppingViewSet, ToppingViewSet, SizeViewSet, ReceiptViewSet
+    OrderViewSet, OrderItemViewSet, OrderToppingViewSet, ToppingViewSet, SizeViewSet, ReceiptViewSet, sugar_list, \
+    create_sugar, delete_sugar, update_sugar, ice_list, create_ice, update_ice, delete_ice
 from .views import dashboard, CategoryListView, create_category, create_product, IngredientListView, \
     create_ingredient, RecipeListView, product_recipe_ingredients, \
     update_category, delete_category, update_product, delete_product, product_list, update_ingredient, \
@@ -75,6 +77,16 @@ urlpatterns = [
     path('create-size/', create_size, name='create-size'),
     path('update-size/', update_size, name='update-size'),
     path('delete-size/', delete_size, name='delete-size'),
+
+    path('sugar-list/', sugar_list, name='sugar-list'),
+    path('create-sugar/', create_sugar, name='create-sugar'),
+    path('update-sugar/', update_sugar, name='update-sugar'),
+    path('delete-sugar/', delete_sugar, name='delete-sugar'),
+
+    path('ice-list/', ice_list, name='ice-list'),
+    path('create-ice/', create_ice, name='create-ice'),
+    path('update-ice/', update_ice, name='update-ice'),
+    path('delete-ice/', delete_ice, name='delete-ice'),
 
     path('ingredient-list/', IngredientListView.as_view(), name='ingredient-list'),
     path('create-ingredient/', create_ingredient, name='create-ingredient'),

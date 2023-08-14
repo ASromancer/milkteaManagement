@@ -26,7 +26,8 @@ from django.views.generic.edit import (
     CreateView
 )
 from .forms import CategoryForm, ProductForm, IngredientForm, RecipeForm, RecipeIngredientForm, \
-    SizeForm, ToppingForm, ReceiptForm, RecipeIngredientFormSet, GroupSelectionForm, UserCreationForm
+    SizeForm, ToppingForm, ReceiptForm, RecipeIngredientFormSet, GroupSelectionForm, UserCreationForm, SugarForm, \
+    IceForm
 from .models import Category, Product, Ingredient, Recipe, Order, OrderItem, Expense, RecipeIngredient, OrderTopping, \
     Topping, Size, Receipt, OrderSize, OrderSugar, Sugar, Ice, OrderIce
 
@@ -400,12 +401,125 @@ def update_size(request):
     return JsonResponse({'status': 'failure'})
 
 
+@login_required(login_url='login')
 def delete_size(request):
     if request.method == 'POST':
         size_id = request.POST.get('size_id')
 
         size = get_object_or_404(Size, id=size_id)
         size.delete()
+
+        # Return a JSON response indicating success
+        return JsonResponse({'status': 'success'})
+
+    # Return a JSON response indicating failure
+    return JsonResponse({'status': 'failure'})
+
+
+# Sugar
+@login_required(login_url='login')
+@user_passes_test(lambda u: not u.groups.filter(name='staff_group').exists(), login_url='pos-page')
+def create_sugar(request):
+    forms = SugarForm()
+    if request.method == 'POST':
+        forms = SugarForm(request.POST)
+        if forms.is_valid():
+            forms.save()
+            return redirect('sugar-list')
+    context = {
+        'form': forms
+    }
+    return render(request, 'store/addSugar.html', context)
+
+
+@login_required(login_url='login')
+@user_passes_test(lambda u: not u.groups.filter(name='staff_group').exists(), login_url='pos-page')
+def sugar_list(request):
+    sugars = Sugar.objects.all()
+    return render(request, 'store/sugar_list.html', {'sugars': sugars})
+
+
+@csrf_exempt
+def update_sugar(request):
+    if request.method == 'POST':
+        sugar_id = request.POST.get('sugar_id')
+        name = request.POST.get('name')
+
+        sugar = get_object_or_404(Sugar, id=sugar_id)
+        sugar.name = name
+
+        sugar.save()
+
+        # Return a JSON response indicating success
+        return JsonResponse({'status': 'success'})
+
+    # Return a JSON response indicating failure
+    return JsonResponse({'status': 'failure'})
+
+
+@login_required(login_url='login')
+def delete_sugar(request):
+    if request.method == 'POST':
+        sugar_id = request.POST.get('sugar_id')
+
+        sugar = get_object_or_404(Sugar, id=sugar_id)
+        sugar.delete()
+
+        # Return a JSON response indicating success
+        return JsonResponse({'status': 'success'})
+
+    # Return a JSON response indicating failure
+    return JsonResponse({'status': 'failure'})
+
+
+# Ice
+@login_required(login_url='login')
+@user_passes_test(lambda u: not u.groups.filter(name='staff_group').exists(), login_url='pos-page')
+def create_ice(request):
+    forms = IceForm()
+    if request.method == 'POST':
+        forms = IceForm(request.POST)
+        if forms.is_valid():
+            forms.save()
+            return redirect('ice-list')
+    context = {
+        'form': forms
+    }
+    return render(request, 'store/addIce.html', context)
+
+
+@login_required(login_url='login')
+@user_passes_test(lambda u: not u.groups.filter(name='staff_group').exists(), login_url='pos-page')
+def ice_list(request):
+    ices = Ice.objects.all()
+    return render(request, 'store/ice_list.html', {'ices': ices})
+
+
+@csrf_exempt
+def update_ice(request):
+    if request.method == 'POST':
+        ice_id = request.POST.get('ice_id')
+        name = request.POST.get('name')
+
+        ice = get_object_or_404(Ice, id=ice_id)
+        ice.name = name
+
+        ice.save()
+
+        # Return a JSON response indicating success
+        return JsonResponse({'status': 'success'})
+
+    # Return a JSON response indicating failure
+    return JsonResponse({'status': 'failure'})
+
+
+@login_required(login_url='login')
+def delete_ice(request):
+    if request.method == 'POST':
+        ice_id = request.POST.get('ice_id')
+
+        ice = get_object_or_404(Ice, id=ice_id)
+        ice.delete()
 
         # Return a JSON response indicating success
         return JsonResponse({'status': 'success'})
