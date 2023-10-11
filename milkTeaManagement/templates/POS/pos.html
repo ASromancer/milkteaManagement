@@ -280,7 +280,6 @@
                 tr.find('.product_price').text(parseFloat(prod_arr[id].price).toLocaleString('en-US'));
                 tr.find('.product_total').text(parseFloat(prod_arr[id].price * qty).toLocaleString('en-US'));
 
-                // Đặt tên name riêng biệt cho các nút radio và input mới trong hàng sản phẩm được thêm vào
                 var unique_id = Date.now();
                 tr.find('[name="order_item_size"]').attr('name', 'order_item_size_' + unique_id);
                 tr.find('[name="order_item_sugar"]').attr('name', 'order_item_sugar_' + unique_id);

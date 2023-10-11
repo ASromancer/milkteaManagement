@@ -1,18 +1,17 @@
 import calendar
 import json
 import sys
+import pandas as pd
 from _pydecimal import Decimal
-from xhtml2pdf import pisa
 from django.contrib.auth.models import Group, User
-from django.db.models import F, Sum
-
+from django.contrib.auth.views import LoginView
+from django.db.models import F, Sum, ProtectedError
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Prefetch
 from django.db.models.functions import ExtractWeek, ExtractMonth
 from django.template.loader import get_template, render_to_string
 from rest_framework import viewsets
 from datetime import date, datetime, timedelta
-
 from .serializers import CategorySerializer, ProductSerializer, IngredientSerializer, RecipeSerializer, \
     RecipeIngredientSerializer, OrderSerializer, OrderItemSerializer, OrderToppingSerializer, ToppingSerializer, \
     SizeSerializer, ReceiptSerializer
@@ -80,7 +79,6 @@ def get_receipt_expenses_by_month():
     return data
 
 
-# Views for JSON response
 def get_monthly_revenue_data(request):
     monthly_revenue_data = get_monthly_revenue()
     return JsonResponse(monthly_revenue_data, safe=False)
@@ -104,6 +102,30 @@ def get_category_revenue_data(request):
 def get_receipt_expenses_by_month_data(request):
     monthly_expenses_data = get_receipt_expenses_by_month()
     return JsonResponse(monthly_expenses_data, safe=False)
+
+# Messages
+messages_df = pd.read_csv('main/messages.csv')
+
+LOGIN_SUCCESS = messages_df.loc[messages_df['message_key'] == 'LOGIN_SUCCESS', 'message_text'].values[0]
+LOGIN_FAIL = messages_df.loc[messages_df['message_key'] == 'LOGIN_FAIL', 'message_text'].values[0]
+CREATE_USER_SUCCESS = messages_df.loc[messages_df['message_key'] == 'CREATE_USER_SUCCESS', 'message_text'].values[0]
+CREATE_USER_FAIL = messages_df.loc[messages_df['message_key'] == 'CREATE_USER_FAIL', 'message_text'].values[0]
+ORDER_SUCCESS = messages_df.loc[messages_df['message_key'] == 'ORDER_SUCCESS', 'message_text'].values[0]
+ORDER_ER01 = messages_df.loc[messages_df['message_key'] == 'ORDER_ER01', 'message_text'].values[0]
+ORDER_ER02 = messages_df.loc[messages_df['message_key'] == 'ORDER_ER02', 'message_text'].values[0]
+
+
+# Login
+class CustomLoginView(LoginView):
+    template_name = 'registration/login.html'
+
+    def form_valid(self, form):
+        messages.success(self.request, LOGIN_SUCCESS)
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.success(self.request, LOGIN_FAIL)
+        return super().form_invalid(form)
 
 
 # Dashboard
@@ -172,26 +194,35 @@ def delete_category(request):
         categoryId = request.POST.get('category_id')
 
         category = get_object_or_404(Category, id=categoryId)
-        category.delete()
 
-        # Return a JSON response indicating success
-        return JsonResponse({'status': 'success'})
+        # Check if the category has associated products
+        if category.product_set.exists():
+            return JsonResponse({'status': 'failure', 'message': 'Category has associated products'})
+
+        try:
+            category.delete()
+            return JsonResponse({'status': 'success'})
+        except ProtectedError:
+            return JsonResponse({'status': 'failure', 'message': 'Category is associated with protected items'})
 
     # Return a JSON response indicating failure
-    return JsonResponse({'status': 'failure'})
+    return JsonResponse({'status': 'failure', 'message': 'Invalid request method'})
 
 
 # Products
 @login_required(login_url='login')
 @user_passes_test(lambda u: not u.groups.filter(name='staff_group').exists(), login_url='pos-page')
 def create_product(request):
+    msg = ""
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-        return redirect('product-list')
+            return redirect('product-list')
+        else:
+            msg = "Please check the form again."
     form = ProductForm()
-    return render(request, 'store/addProduct.html', {'form': form})
+    return render(request, 'store/addProduct.html', {'form': form, 'msg': msg})
 
 
 @login_required(login_url='login')
@@ -234,10 +265,16 @@ def delete_product(request):
         productId = request.POST.get('product_id')
 
         product = get_object_or_404(Product, id=productId)
-        product.delete()
 
-        # Return a JSON response indicating success
-        return JsonResponse({'status': 'success'})
+        # Check if the product has associated order items
+        if OrderItem.objects.filter(product=product).exists():
+            return JsonResponse({'status': 'failure', 'message': 'Product has associated orders'})
+
+        try:
+            product.delete()
+            return JsonResponse({'status': 'success'})
+        except ProtectedError:
+            return JsonResponse({'status': 'failure', 'message': 'Product is associated with protected items'})
 
     # Return a JSON response indicating failure
     return JsonResponse({'status': 'failure'})
@@ -292,10 +329,16 @@ def delete_ingredient(request):
         ingredientId = request.POST.get('ingredient_id')
 
         ingredient = get_object_or_404(Ingredient, id=ingredientId)
-        ingredient.delete()
 
-        # Return a JSON response indicating success
-        return JsonResponse({'status': 'success'})
+        # Check if the ingredient is used in any recipe
+        if RecipeIngredient.objects.filter(ingredient=ingredient).exists():
+            return JsonResponse({'status': 'failure', 'message': 'Ingredient is used in recipes'})
+
+        try:
+            ingredient.delete()
+            return JsonResponse({'status': 'success'})
+        except ProtectedError:
+            return JsonResponse({'status': 'failure', 'message': 'Ingredient is associated with protected items'})
 
     # Return a JSON response indicating failure
     return JsonResponse({'status': 'failure'})
@@ -349,10 +392,16 @@ def delete_topping(request):
         topping_id = request.POST.get('topping_id')
 
         topping = get_object_or_404(Topping, id=topping_id)
-        topping.delete()
 
-        # Return a JSON response indicating success
-        return JsonResponse({'status': 'success'})
+        # Check if the topping is used in any OrderTopping relationship
+        if OrderTopping.objects.filter(topping=topping).exists():
+            return JsonResponse({'status': 'failure', 'message': 'Topping is used in orders'})
+
+        try:
+            topping.delete()
+            return JsonResponse({'status': 'success'})
+        except ProtectedError:
+            return JsonResponse({'status': 'failure', 'message': 'Topping is associated with protected items'})
 
     # Return a JSON response indicating failure
     return JsonResponse({'status': 'failure'})
@@ -407,10 +456,16 @@ def delete_size(request):
         size_id = request.POST.get('size_id')
 
         size = get_object_or_404(Size, id=size_id)
-        size.delete()
 
-        # Return a JSON response indicating success
-        return JsonResponse({'status': 'success'})
+        # Check if the size is used in any OrderSize relationship
+        if OrderSize.objects.filter(size=size).exists():
+            return JsonResponse({'status': 'failure', 'message': 'Size is used in orders'})
+
+        try:
+            size.delete()
+            return JsonResponse({'status': 'success'})
+        except ProtectedError:
+            return JsonResponse({'status': 'failure', 'message': 'Size is associated with protected items'})
 
     # Return a JSON response indicating failure
     return JsonResponse({'status': 'failure'})
@@ -463,10 +518,16 @@ def delete_sugar(request):
         sugar_id = request.POST.get('sugar_id')
 
         sugar = get_object_or_404(Sugar, id=sugar_id)
-        sugar.delete()
 
-        # Return a JSON response indicating success
-        return JsonResponse({'status': 'success'})
+        # Check if the sugar is used in any OrderSugar relationship
+        if OrderSugar.objects.filter(sugar=sugar).exists():
+            return JsonResponse({'status': 'failure', 'message': 'Sugar type is used in orders'})
+
+        try:
+            sugar.delete()
+            return JsonResponse({'status': 'success'})
+        except ProtectedError:
+            return JsonResponse({'status': 'failure', 'message': 'Sugar type is associated with protected items'})
 
     # Return a JSON response indicating failure
     return JsonResponse({'status': 'failure'})
@@ -519,10 +580,16 @@ def delete_ice(request):
         ice_id = request.POST.get('ice_id')
 
         ice = get_object_or_404(Ice, id=ice_id)
-        ice.delete()
 
-        # Return a JSON response indicating success
-        return JsonResponse({'status': 'success'})
+        # Check if the ice type is used in any OrderIce relationship
+        if OrderIce.objects.filter(ice=ice).exists():
+            return JsonResponse({'status': 'failure', 'message': 'Ice type is used in orders'})
+
+        try:
+            ice.delete()
+            return JsonResponse({'status': 'success'})
+        except ProtectedError:
+            return JsonResponse({'status': 'failure', 'message': 'Ice type is associated with protected items'})
 
     # Return a JSON response indicating failure
     return JsonResponse({'status': 'failure'})
@@ -716,7 +783,7 @@ def create_receipt(request):
 def pos(request):
     products = Product.objects.filter(recipe__isnull=False)
     toppings = Topping.objects.all()
-    sizes = Size.objects.all().order_by('-id')
+    sizes = Size.objects.all().order_by('id')
     sugars = Sugar.objects.all()
     ices = Ice.objects.all()
     product_json = []
@@ -749,15 +816,20 @@ def checkout_modal(request):
 def save_pos(request):
     resp = {'status': 'failed', 'msg': ''}
     data = request.POST
-    print(data)
     selected_toppings_data = data.get('selectedToppings', '[]')
     selected_toppings = json.loads(selected_toppings_data)
+
+    if not check_ingredients(data):
+        resp['status'] = 'failed'
+        resp['msg'] = ORDER_ER02
+        messages.error(request, ORDER_ER02)
+        return HttpResponse(json.dumps(resp), content_type="application/json")
 
     pref = datetime.now().year + datetime.now().year
     i = 1
     while True:
         code = '{:0>5}'.format(i)
-        i += int(1)
+        i += 1
         check = Order.objects.filter(code=str(pref) + str(code)).all()
         if len(check) <= 0:
             break
@@ -814,29 +886,36 @@ def save_pos(request):
                 ice = Ice.objects.filter(id=ice_id).first()
                 OrderIce.objects.create(order_item=order_item, ice=ice)
 
-            i += int(1)
+            i += 1
+
         resp['status'] = 'success'
         resp['sale_id'] = sale_id
-        print(sale_id)
-        messages.success(request, "Sale Record has been saved.")
+        messages.success(request, ORDER_SUCCESS)
+
     except Exception as e:
-        resp['msg'] = "Not enough ingredients to complete the sale"
-        print("Unexpected error:", sys.exc_info()[0])
-        print("Exception details:", e)
-        try:
-            last_order = Order.objects.last()
-            if last_order:
-                last_order.delete()
-                print("Last order has been deleted.")
-            else:
-                print("No orders exist.")
-        except Order.DoesNotExist:
-            print("No orders exist.")
+        messages.error(request, ORDER_ER01)
+        resp['msg'] = ORDER_ER01
+
     return HttpResponse(json.dumps(resp), content_type="application/json")
+
+def check_ingredients(data):
+    for i, product_id in enumerate(data.getlist('product_id[]')):
+        qty = int(data.getlist('qty[]')[i])
+        product = Product.objects.filter(id=product_id).first()
+        recipe = product.recipe
+        recipe_ingredients = recipe.recipeingredient_set.all()
+
+        for recipe_ingredient in recipe_ingredients:
+            ingredient = recipe_ingredient.ingredient
+            quantity_required = recipe_ingredient.quantity * qty
+
+            if ingredient.quantity < quantity_required:
+                return False
+
+    return True
 
 
 @login_required
-@user_passes_test(lambda u: not u.groups.filter(name='staff_group').exists(), login_url='pos-page')
 def salesList(request):
     sales = Order.objects.all()
     sale_data = []
@@ -945,13 +1024,19 @@ def create_user(request):
             group, _ = Group.objects.get_or_create(name=group_name)
             user.groups.add(group)
 
-            return redirect('user-list')  # Redirect to user list page after successful save
+            messages.success(request, CREATE_USER_SUCCESS)
+
+            return redirect('user-list')
+        else:
+            messages.error(request, CREATE_USER_FAIL)
+
     else:
         user_form = UserCreationForm()
         group_form = GroupSelectionForm()
 
     context = {'user_form': user_form, 'group_form': group_form}
     return render(request, 'store/addUser.html', context)
+
 
 
 def active_user(request):
