@@ -1,2 +1,2 @@
 # milkteaManagement
-A Milkte Management website using Python Django
+A Milktea Management website using Python Django
