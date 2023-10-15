@@ -10,15 +10,16 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 from pathlib import Path
+import dj_database_url
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'hegu2lkp2ef%cl%j3j8zk&1)$9cof(_psf6*$-!3nn6ygphy6n'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(" ")
 
 # Application definition
 
@@ -78,6 +79,9 @@ DATABASES = {
         'POST': '5432',
     }
 }
+
+database_url = os.environ.get("DATABASE_URL")
+DATABASES["default"] = dj_database_url.parse(database_url)
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
