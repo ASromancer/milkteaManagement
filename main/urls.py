@@ -2,8 +2,6 @@ from django.conf.urls.static import static
 from django.urls import path, include
 from django.conf import settings
 from rest_framework import routers, permissions
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
 
 
 from .views import CategoryViewSet, ProductViewSet, IngredientViewSet, RecipeViewSet, RecipeIngredientViewSet, \
@@ -31,16 +29,6 @@ router.register(r'order-toppings', OrderToppingViewSet)
 router.register(r'toppings', ToppingViewSet)
 router.register(r'sizes', SizeViewSet)
 router.register(r'receipts', ReceiptViewSet)
-
-schema_view = get_schema_view(
-    openapi.Info(
-        title="MilkTea Management API",
-        default_version="v1",
-        contact=openapi.Contact(email="nguyentuanhiep01@gmail.com"),
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
-)
 
 urlpatterns = [
     # Swagger
