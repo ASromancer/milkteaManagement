@@ -17,27 +17,7 @@ from .views import dashboard, CategoryListView, create_category, create_product,
     get_receipt_expenses_by_month_data, create_user, user_list, add_receipt, active_user, show_report, \
     get_orders_by_date_range
 
-router = routers.DefaultRouter()
-router.register(r'categories', CategoryViewSet)
-router.register(r'products', ProductViewSet)
-router.register(r'ingredients', IngredientViewSet)
-router.register(r'recipes', RecipeViewSet)
-router.register(r'recipe-ingredients', RecipeIngredientViewSet)
-router.register(r'orders', OrderViewSet)
-router.register(r'order-items', OrderItemViewSet)
-router.register(r'order-toppings', OrderToppingViewSet)
-router.register(r'toppings', ToppingViewSet)
-router.register(r'sizes', SizeViewSet)
-router.register(r'receipts', ReceiptViewSet)
-
 urlpatterns = [
-    # Swagger
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-
-    # API
-    path('api/', include(router.urls)),
-
     # Dashboard
     path('', dashboard, name='dashboard'),
 
