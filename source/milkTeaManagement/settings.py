@@ -85,9 +85,9 @@ DATABASES = {
 #     "default": dj_database_url.parse(os.environ.get("DATABASE_URL"))
 # }
 
-# DATABASES = {
-#     "default": dj_database_url.parse("postgres://milkteamanagement_user:n3tsK2d0HI7QVc4cevbNhewljXIWkPtj@dpg-cklupuav7m0s73dnue50-a.singapore-postgres.render.com/milkteamanagement")
-# }
+DATABASES = {
+    "default": dj_database_url.parse("postgres://milkteamanagement_user:n3tsK2d0HI7QVc4cevbNhewljXIWkPtj@dpg-cklupuav7m0s73dnue50-a.singapore-postgres.render.com/milkteamanagement")
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
