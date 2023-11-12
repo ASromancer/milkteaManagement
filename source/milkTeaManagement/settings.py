@@ -15,15 +15,15 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECRET_KEY = os.environ.get("SECRET_KEY")
-#
-# DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
-#
-# ALLOWED_HOSTS = ['milkteamanagement.onrender.com']
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
-SECRET_KEY = 123
-DEBUG = True
-ALLOWED_HOSTS = []
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+
+ALLOWED_HOSTS = ['milkteamanagement.onrender.com']
+
+# SECRET_KEY = 123
+# DEBUG = True
+# ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
@@ -81,9 +81,9 @@ DATABASES = {
     }
 }
 
-# DATABASES = {
-#     "default": dj_database_url.parse(os.environ.get("DATABASE_URL"))
-# }
+DATABASES = {
+    "default": dj_database_url.parse(os.environ.get("DATABASE_URL"))
+}
 
 # DATABASES = {
 #     "default": dj_database_url.parse("postgres://milkteamanagement_user:n3tsK2d0HI7QVc4cevbNhewljXIWkPtj@dpg-cklupuav7m0s73dnue50-a.singapore-postgres.render.com/milkteamanagement")
@@ -125,6 +125,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL="/media/"
+MEDIA_ROOT=os.path.join(BASE_DIR,'media')
 
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'

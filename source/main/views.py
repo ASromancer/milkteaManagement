@@ -100,6 +100,7 @@ def get_receipt_expenses_by_month_data(request):
     monthly_expenses_data = get_receipt_expenses_by_month()
     return JsonResponse(monthly_expenses_data, safe=False)
 
+
 # Messages
 messages_df = pd.read_csv('main/messages.csv')
 
@@ -895,6 +896,7 @@ def save_pos(request):
 
     return HttpResponse(json.dumps(resp), content_type="application/json")
 
+
 def check_ingredients(data):
     for i, product_id in enumerate(data.getlist('product_id[]')):
         qty = int(data.getlist('qty[]')[i])
@@ -1033,7 +1035,6 @@ def create_user(request):
 
     context = {'user_form': user_form, 'group_form': group_form}
     return render(request, 'store/addUser.html', context)
-
 
 
 def active_user(request):

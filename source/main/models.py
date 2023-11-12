@@ -9,14 +9,14 @@ from django.utils.safestring import mark_safe
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     description = models.TextField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -33,7 +33,7 @@ class Product(models.Model):
 
 
 class Topping(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
@@ -41,7 +41,7 @@ class Topping(models.Model):
 
 
 class Size(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
@@ -49,21 +49,21 @@ class Size(models.Model):
 
 
 class Sugar(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
 
 class Ice(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
 
 class Ingredient(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     quantity = models.PositiveIntegerField(default=0)
     unit = models.CharField(max_length=100, default='g')
 
@@ -180,5 +180,5 @@ class Receipt(models.Model):
         return f"Receipt #{self.pk}"
 
 
-# admin_group, _ = Group.objects.get_or_create(name='admin_group')
-# staff_group, _ = Group.objects.get_or_create(name='staff_group')
+admin_group, _ = Group.objects.get_or_create(name='admin_group')
+staff_group, _ = Group.objects.get_or_create(name='staff_group')

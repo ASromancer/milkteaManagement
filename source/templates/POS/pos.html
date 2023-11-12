@@ -27,7 +27,7 @@
                         <div class="form-group mb-3">
                             <label for="product-qty">Quantity</label>
                             <input type="number" class="form-control form-control-sm text-center" step="any"
-                                   id="product-qty" value="1">
+                                   id="product-qty" value="1" min="1">
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-2 col-md-12">
@@ -124,7 +124,7 @@
             <input type="hidden" name="product_id[]">
             <input type="hidden" name="price[]">
             <input type="number" name="qty[]" min="0" class="form-control form-control-sm rounded-0 text-center"
-                   value="1">
+                   value="1" min="1">
             <input type="hidden" name="total[]">
         </td>
         <td class="px-2 py-1 product_name text-start"></td>
@@ -270,6 +270,10 @@
                 alert("Product and Quantity Field is required!");
                 return false;
             }
+            if (qty <= 0) {
+                alert("Quantity is lower than 0!");
+                return false;
+            }
             if (!!prod_arr[id]) {
                 var tr = $($('noscript#item-clone').html()).clone();
                 tr.find('[name="qty[]"]').val(qty);
@@ -312,6 +316,18 @@
         $('#check_out').click(function() {
             if ($('#POS-field table tbody tr').length <= 0) {
                 alert("Add at least 1 product first!");
+                return false;
+            }
+            if ($('[name="product-qty"]').val() <= 0) {
+                alert("Quantity is lower than 0")
+                return false;
+            }
+            if ($('[name="tax"]').val() < 0) {
+                alert("Tax is lower than 0")
+                return false;
+            }
+            if ($('[name="qty[]"]').val() <= 0) {
+                alert("Quantity is lower than 0")
                 return false;
             }
             uni_modal("Checkout", "{% url 'checkout-modal' %}?grand_total=" + $('[name="grand_total"]').val());

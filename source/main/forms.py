@@ -5,6 +5,17 @@ from .models import Category, Product, Ingredient, Recipe, RecipeIngredient, Ord
     Size, Receipt, Sugar, Ice
 
 
+class UniqueFieldsForm(forms.ModelForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.instance.pk is None:
+            for field_name in self.Meta.unique_fields:
+                value = cleaned_data.get(field_name)
+                if value and self.Meta.model.objects.filter(**{field_name: value}).exists():
+                    self.add_error(field_name, f'{field_name.capitalize()} must be unique.')
+        return cleaned_data
+
+
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
@@ -12,6 +23,7 @@ class CategoryForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'name'})
         }
+        unique_fields = ['name']
 
 
 class ToppingForm(forms.ModelForm):
@@ -22,6 +34,7 @@ class ToppingForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'name'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'id': 'price'}),
         }
+        unique_fields = ['name']
 
 
 class SizeForm(forms.ModelForm):
@@ -32,6 +45,7 @@ class SizeForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'name'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'id': 'price'}),
         }
+        unique_fields = ['name']
 
 
 class SugarForm(forms.ModelForm):
@@ -41,6 +55,7 @@ class SugarForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'name'}),
         }
+        unique_fields = ['name']
 
 
 class IceForm(forms.ModelForm):
@@ -50,6 +65,7 @@ class IceForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'name'}),
         }
+        unique_fields = ['name']
 
 
 class ProductForm(forms.ModelForm):
@@ -63,6 +79,7 @@ class ProductForm(forms.ModelForm):
             'price': forms.NumberInput(attrs={'class': 'form-control', 'id': 'price'}),
             'image': forms.ClearableFileInput(attrs={'class': 'form-control', 'id': 'image'}),
         }
+        unique_fields = ['name']
 
 
 class IngredientForm(forms.ModelForm):
@@ -73,6 +90,7 @@ class IngredientForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'id': 'name'}),
             'unit': forms.TextInput(attrs={'class': 'form-control', 'id': 'unit'}),
         }
+        unique_fields = ['name']
 
 
 class RecipeForm(forms.ModelForm):
